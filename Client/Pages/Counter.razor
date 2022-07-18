@@ -1,0 +1,29 @@
+﻿@page "/counter"
+@inject SingletonService singletonService
+
+<PageTitle>Counter</PageTitle>
+
+<h1 style="color: @appState.Color">Counter</h1>
+
+<div style="display:flex;">
+    <div style="width:150px">
+        <select @bind="@appState.Color" class="form-control" stye="margin-top;15px">}
+            <option value="green">Verde</option>
+            <option value="red">Rojo</option>
+            <option value="blue">Azul</option>
+        </select>
+    </div>
+    <div style="width:150px">
+        <select @bind="@appState.Size" class="form-control" stye="margin-top;15px">}
+            <option value="12px">12px</option>
+            <option value="25px">25px</option>
+            <option value="40px">40px</option>
+        </select>
+    </div>
+</div>
+
+<p style="font-size:@appState.Size" role="status">Current count: @currentCount</p>
+<p role="status">Singleton Current count: @singletonService.Value</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+

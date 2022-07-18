@@ -1,0 +1,23 @@
+﻿<div> 
+    <p>Titulo: @Film.Title</p>
+    <p>Fecha: @Film.DateLaunched.ToString("dd MMM yyyy")</p>
+    @if(ShowButton)
+    {
+        <div>
+            <button @onclick="@(() => Delete.InvokeAsync(Film))" >Borrar</button>
+        </div>
+    }
+</div
+
+@code {
+    [Parameter]
+    public Film Film { get; set; }
+
+    [Parameter]
+    public bool ShowButton { get; set; }
+
+    [Parameter]
+    public EventCallback<Film> Delete { get; set; }
+
+
+}

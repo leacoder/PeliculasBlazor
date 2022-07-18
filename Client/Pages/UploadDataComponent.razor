@@ -1,0 +1,167 @@
+﻿@page "/uploaddata"
+@using System.Net.Http.Headers
+@using static System.Net.WebRequestMethods
+@inject ILogger<UploadDataComponent> Logger
+@using System.Linq
+@using Microsoft.Extensions.Logging
+@inject HttpClient Http
+
+<h3>Upload Files</h3>
+
+<p>
+    <label>
+        Max file size:
+        <input type="number" @bind="maxFileSize" />
+    </label>
+</p>
+
+<p>
+    <label>
+        Max allowed files:
+        <input type="number" @bind="maxAllowedFiles" />
+    </label>
+</p>
+
+<p>
+    <label>
+        Upload up to @maxAllowedFiles of up to @maxFileSize bytes:
+        <InputFile OnChange="@LoadFiles" multiple />
+    </label>
+</p>
+@*<button @onClick="@SubmitFiles">Submit</button>*@
+
+@if (isLoading)
+{
+    <p>Uploading...</p>
+}
+else
+{
+    <ul>
+        @foreach (var file in loadedFiles)
+        {
+            <li>
+                <ul>
+                    <li>Name: @file.Name</li>
+                    <li>Last modified: @file.LastModified.ToString()</li>
+                    <li>Size (bytes): @file.Size</li>
+                    <li>Content type: @file.ContentType</li>
+                </ul>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<IBrowserFile> loadedFiles = new();
+    //private List<File> files = new();
+    private List<UploadResult> uploadResults = new();
+    private long maxFileSize = 1024 * 15;
+    private int maxAllowedFiles = 3;
+    private bool isLoading;
+    //private bool shouldRender= true;
+    bool upload = false;
+
+    private void LoadFiles(InputFileChangeEventArgs files)
+    {
+        isLoading = true;
+        loadedFiles.Clear();
+
+        foreach (var file in files.GetMultipleFiles(maxAllowedFiles))
+        {
+            try
+            {
+                loadedFiles.Add(file);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("File: {Filename} Error: {Error}", 
+                    file.Name, ex.Message);
+            }
+        }
+
+        isLoading = false;
+    }
+    //protected override bool ShouldRender() => shouldRender;
+
+    //private async void SubmitFiles()
+    //{
+    //    using var content = new MultipartFormDataContent();
+    //    foreach (var file in loadedFiles)
+    //    {
+    //        shouldRender = false;
+            
+    //        var upload = false;
+
+    //        if (uploadResults.SingleOrDefault(
+    //            f => f.FileName == file.Name) is null)
+    //        {
+    //            try
+    //            {
+    //                var fileContent = 
+    //                    new StreamContent(file.OpenReadStream(maxFileSize));
+
+    //                fileContent.Headers.ContentType = 
+    //                    new MediaTypeHeaderValue(file.ContentType);
+
+    //                files.Add(new() { Name = file.Name });
+
+    //                content.Add(
+    //                    content: fileContent,
+    //                    name: "\"files\"",
+    //                    fileName: file.Name);
+
+    //                upload = true;
+    //            }
+    //            catch (Exception ex)
+    //            {
+    //                Logger.LogInformation(
+    //                    "{FileName} not uploaded (Err: 6): {Message}", 
+    //                    file.Name, ex.Message);
+
+    //                uploadResults.Add(
+    //                    new()
+    //                    {
+    //                        FileName = file.Name, 
+    //                        ErrorCode = 6, 
+    //                        Uploaded = false
+    //                    });
+    //            }
+    //        }
+    //    }
+
+    //    if (upload)
+    //    {
+    //        var response = await Http.PostAsync("/Filesave", content);
+
+    //        var newUploadResults = await response.Content
+    //            .ReadFromJsonAsync<IList<UploadResult>>();
+
+    //        if (newUploadResults is not null)
+    //        {
+    //            uploadResults = uploadResults.Concat(newUploadResults).ToList();
+    //        }
+    //    }
+
+    //    shouldRender = true;
+    //}
+
+
+    //private static bool FileUpload(IList<UploadResult> uploadResults,
+    //    string? fileName, ILogger<UploadDataComponent> logger, out UploadResult result)
+    //{
+    //    result = uploadResults.SingleOrDefault(f => f.FileName == fileName) ?? new();
+
+    //    if (!result.Uploaded)
+    //    {
+    //        logger.LogInformation("{FileName} not uploaded (Err: 5)", fileName);
+    //        result.ErrorCode = 5;
+    //    }
+
+    //    return result.Uploaded;
+    //}
+
+    //private class File
+    //{
+    //    public string? Name { get; set; }
+    //}
+}

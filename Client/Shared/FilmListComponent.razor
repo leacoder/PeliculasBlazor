@@ -1,0 +1,49 @@
+﻿@inject IRepository Repository;
+
+<input type="checkbox" @bind="ShowButton"/>
+
+<GenericListComponent GenericList="Films" >
+    <Loading>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif?20151024034921" />
+        <text>Cargando...</text>
+    </Loading>
+    <NoRecords>
+        <text>No hay registros para mostrar...</text>
+    </NoRecords>
+    <Records Context="Film" >
+        <FilmComponent Film="Film" ShowButton="ShowButton"  Delete="Delete"/>
+    </Records>
+</GenericListComponent>
+
+<ConfirmationComponent @ref="confirmation" onConfirm="DeleteConfirmated" onCancel="OnCancelConfirmation">
+    <div>Desea borrar una pelicula?</div>
+</ConfirmationComponent>
+
+@code {
+    bool ShowButton = true;
+
+    ConfirmationComponent confirmation;
+    Film filmToDelete;
+
+    [Parameter] public List<Film> Films { get; set; }
+
+    void Delete(Film film)
+    {
+        confirmation.Show();
+        filmToDelete = film;
+    }
+
+    void DeleteConfirmated()
+    {
+        Films.Remove(filmToDelete);
+        filmToDelete = null;
+        confirmation.Hide();
+    }
+
+    void OnCancelConfirmation()
+    {
+        confirmation.Hide();
+        filmToDelete = null;
+    }
+
+}

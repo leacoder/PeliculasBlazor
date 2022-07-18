@@ -1,0 +1,28 @@
+﻿@typeparam Titem
+
+@if (GenericList == null)
+{
+    @Loading
+}
+else if (GenericList.Count == 0)
+{
+    @NoRecords
+}
+else
+{
+    @foreach (var element in GenericList )
+    {
+        @Records(element)
+    }
+}
+
+@code {
+
+    [Parameter] public RenderFragment Loading { get; set; }
+    [Parameter] public RenderFragment NoRecords { get; set; }
+    [Parameter] public RenderFragment<Titem> Records { get; set; }
+    [Parameter] public List<Titem> GenericList { get; set; }
+
+
+
+}

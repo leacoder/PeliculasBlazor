@@ -1,0 +1,16 @@
+﻿@page "/"
+
+<PageTitle>Inicio</PageTitle>
+
+<div>
+    <h3 style="color:@appState.Color">Peliculas</h3>
+    
+    <FilmListComponent Films="getFilms()" ></FilmListComponent>
+    
+</div>
+<div>
+    <h3>Crear nueva peli</h3>
+    
+    <TextBoxComponent @attributes="parametersArbitraries"/>
+    <Button>Agregar</Button>
+</div>
