@@ -1,0 +1,47 @@
+﻿<li>
+    <div class="item-container">
+        @if (Group.SubFolders.Any())
+        {
+            @if (Group.IsExpanded)
+            {
+                <span class="oi oi-arrow-top" aria-hidden="true" style="transform: rotate(180deg)" 
+                    @onclick="ToggleGroup"></span>
+            }
+            else
+            {
+                <span class="oi oi-arrow-top" aria-hidden="true" style="transform: rotate(90deg)" 
+                    @onclick="ToggleGroup"></span>
+            }
+        }
+         <span class="oi oi-arrow-top" aria-hidden="true"
+         style="cursor: pointer; 
+                 @(Group.SubFolders.Any() ? "" : "padding-left: 18px")
+                 @(allEntriesSelected ? "check_box" : "check_box_outline_blank")"></span> 
+
+        <div style="display: inline-block" @onclick="ToggleGroup">
+            <span class="oi oi-folder" aria-hidden="true"></span>
+            <div style="display: inline-block">@Group.Name</div>
+        </div>
+    </div>
+
+    @if (Group.SubFolders.Any() && Group.IsExpanded)
+    {
+        <ul>
+        @foreach (var subGroup in Group.SubFolders)
+        {
+            <GroupItemComponent Group="subGroup"/>
+        }
+        </ul>
+    }
+</li>
+
+@code {
+    [Parameter] public Folder Group { get; set; }
+
+    public bool allEntriesSelected { get; set; }
+
+    async Task ToggleGroup()
+    {
+        Group.IsExpanded = !Group.IsExpanded;
+    }
+}

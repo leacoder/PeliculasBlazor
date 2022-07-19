@@ -1,0 +1,15 @@
+﻿<div>
+    <ul>
+        @foreach (var group in Groups)
+        {
+            <GroupItemComponent Group="group" />
+        }
+    </ul>
+</div>
+
+@code {
+
+    [Parameter] public List<Folder> Groups { get; set; }
+
+
+}

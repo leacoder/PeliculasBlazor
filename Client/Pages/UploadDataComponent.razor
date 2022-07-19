@@ -25,7 +25,9 @@
 <p>
     <label>
         Upload up to @maxAllowedFiles of up to @maxFileSize bytes:
-        <InputFile OnChange="@LoadFiles" multiple />
+        <InputFile OnChange="@LoadFiles" multiple
+                               webkitdirectory
+                               directory onselect="@LoadFiles" />
     </label>
 </p>
 @*<button @onClick="@SubmitFiles">Submit</button>*@

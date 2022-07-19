@@ -1,0 +1,53 @@
+﻿@page "/foldertree"
+
+<h3>FolderTreeComponent</h3>
+
+<FolderTreeComponent Groups="@GetGroups()" />
+
+
+@code {
+    public List<Folder> Groups { get; set; }
+
+    public List<Folder> GetGroups()
+    {
+        var hija = new Folder() { Name = "folder hija", ParentFolderId = 1 };
+        var hijo = new Folder() { Name = "folder hijo", ParentFolderId = 1 };
+        var hije = new Folder() { Name = "folder hije", ParentFolderId = 1, SubFolders = new List<Folder>()
+                {
+                    new Folder() { Name = "hije del hije" , ParentFolderId = 1, SubFolders = new List<Folder>() { new Folder() { Name = "Niete del hije", ParentFolderId = 1 } } }
+                }
+            };
+        // Get all groups from DB to save all the extra database calls
+        var allGroups = new List<Folder>()
+        {
+            new Folder()
+            {
+                Name = "Folder Base",
+                ParentFolder = null,
+                ParentFolderId = 1,
+                SubFolders = new List<Folder>()
+                {
+                    hija, hijo ,hije
+                }
+            },
+            
+        };
+
+        // Start recursive function with the top of the tree
+        LoadSubgroups(allGroups, null);
+
+        allGroups = allGroups.Where(x => x.ParentFolder == null).ToList();
+    
+        return allGroups;
+    }
+
+    private List<Folder> LoadSubgroups(List<Folder> allGroups, Folder? parentGroup)
+    {
+        var groups = allGroups.Where(x => x.ParentFolderId == parentGroup?.ParentFolderId).ToList();
+
+        foreach (var group in groups)
+            group.SubFolders = LoadSubgroups(allGroups, group);
+
+        return groups;
+    }
+}

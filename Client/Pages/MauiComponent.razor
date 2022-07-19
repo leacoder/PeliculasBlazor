@@ -1,0 +1,15 @@
+﻿@page "/maui"
+
+
+<button @onclick="OpenFolder">Open Folder</button>
+@code {
+  void OpenFolder()  
+  {
+    var folder= @"C:\Program Files";
+    var oFolder = new System.Diagnostics.ProcessStartInfo() 
+    { 
+      FileName = folder, UseShellExecute = true 
+    };
+    System.Diagnostics.Process.Start(oFolder);
+  }
+}
