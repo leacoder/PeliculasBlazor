@@ -3,7 +3,7 @@
 
 <h3>FolderTreeComponent</h3>
 
-<FolderTreeComponent Groups="@Groups" />
+<FolderTreeComponent Folders="@Folders" />
 
 <button @onclick="OpenDictoryPicker">Open Directory Picker</button>
 <br />
@@ -96,7 +96,7 @@
                     }
                     StateHasChanged();
                 }
-                Groups = directoryBase;
+                Folders = directoryBase;
             }
         }
     }
@@ -115,7 +115,7 @@
         public List<Entity> Children { get; set; }
     }
 
-    public List<Folder> Groups { get; set; } = new List<Folder>();
+    public List<Folder> Folders { get; set; } = new List<Folder>();
 
     private Folder? SearchParentFolders(List<Folder> allFolders, string? parentName)
     {

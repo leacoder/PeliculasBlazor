@@ -6,20 +6,7 @@
             {
                 <span class="oi oi-arrow-top" aria-hidden="true" style="transform: rotate(180deg)" 
                     @onclick="ToggleGroup"></span>
-                @if(Folder.Files.Any())
-                {
-                    <li>
-                    @foreach(var file in Folder.Files)
-                    {
-                        <div class="item-container">
-                        <div style="display: inline-block" @onclick="ToggleGroup">
-                            <span class="oi oi-file" aria-hidden="true"></span>
-                            <div style="display: inline-block">@file</div>
-                        </div>
-                        </div>
-                    }
-                    </li>
-                } 
+
             }
             else
             {
@@ -46,11 +33,25 @@
         <ul>
         @foreach (var subFolder in Folder.SubFolders)
         {
-            <GroupItemComponent Folder="subFolder"/>
+            <FolderItemComponent Folder="subFolder"/>
 
         }
+        @if(Folder.Files.Any() && Folder.IsExpanded)
+        {
+            <li>
+            @foreach(var file in Folder.Files)
+            {
+                <div class="item-container">
+                    <span class="oi oi-file" aria-hidden="true"></span>
+                    <div style="display: inline-block">@file</div>
+                </div>
+            }
+            </li>
+        } 
         </ul>
     }
+
+    
 </li>
 
 @code {
