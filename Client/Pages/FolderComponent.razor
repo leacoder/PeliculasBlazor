@@ -1,53 +1,140 @@
 ﻿@page "/foldertree"
+@inject FileSystemAccessService FileSystemAccessService;
 
 <h3>FolderTreeComponent</h3>
 
-<FolderTreeComponent Groups="@GetGroups()" />
+<FolderTreeComponent Groups="@Groups" />
 
+<button @onclick="OpenDictoryPicker">Open Directory Picker</button>
+<br />
 
 @code {
-    public List<Folder> Groups { get; set; }
+    private FileSystemDirectoryHandle? directoryHandle = null;
+    private int entitiesChecked = 0;
+    private Entity rootEntity = new(FileSystemHandleKind.Directory, null);
 
-    public List<Folder> GetGroups()
+    protected async Task OpenDictoryPicker()
     {
-        var hija = new Folder() { Name = "folder hija", ParentFolderId = 1 };
-        var hijo = new Folder() { Name = "folder hijo", ParentFolderId = 1 };
-        var hije = new Folder() { Name = "folder hije", ParentFolderId = 1, SubFolders = new List<Folder>()
-                {
-                    new Folder() { Name = "hije del hije" , ParentFolderId = 1, SubFolders = new List<Folder>() { new Folder() { Name = "Niete del hije", ParentFolderId = 1 } } }
-                }
-            };
-        // Get all groups from DB to save all the extra database calls
-        var allGroups = new List<Folder>()
+        try
         {
-            new Folder()
+            var options = new DirectoryPickerOptionsStartInFileSystemHandle();
+            directoryHandle = await FileSystemAccessService.ShowDirectoryPickerAsync(options);
+        }
+        catch (JSException ex)
+        {
+            Console.WriteLine(ex);
+        }
+        finally
+        {
+            if (directoryHandle != null)
             {
-                Name = "Folder Base",
-                ParentFolder = null,
-                ParentFolderId = 1,
-                SubFolders = new List<Folder>()
+                //Create folder base
+                var directoryBase = new List<Folder>()
                 {
-                    hija, hijo ,hije
+                    new Folder(){ Name = directoryHandle.Name }
+                };
+                var values = await directoryHandle.ValuesAsync();
+
+                entitiesChecked = 0;
+                StateHasChanged();
+                var queue = new Queue<(Entity entity, FileSystemDirectoryHandle dir, FileSystemHandle value)>();
+                foreach (var value in values)
+                {
+                    if (value.Kind is FileSystemHandleKind.File)
+                    {
+                        directoryBase.First().Files.Add( value.Name );
+                        //var content = File
+                    }
+                    else if( value.Kind is FileSystemHandleKind.Directory)
+                    {
+                        directoryBase.First().SubFolders.Add(new Folder() { Name = value.Name  }); 
+                        var entity = new Entity(value.Kind, value);
+                        rootEntity.Children.Add(entity);
+                        queue.Enqueue((entity, directoryHandle, value));
+                    }
+                    
+                    entitiesChecked++;
+                    StateHasChanged();
                 }
-            },
-            
-        };
+                while (queue.Count > 0)
+                {
+                    var (entity, dir, value) = queue.Dequeue();
+                    entitiesChecked += 1;
+                    if (value.Kind is FileSystemHandleKind.File)
+                    {
+                        var fileSystemHandle = await dir.GetFileHandleAsync(value.Name);
+                        File file = await fileSystemHandle.GetFileAsync();
+                        entity.Size = file.Size;
+                        //Add file to logic structure
+                        //file
+                        var parentFolder = SearchParentFolders(directoryBase, dir.Name);
+                        parentFolder?.Files.Add( value.Name );
+                    }
+                    else if (value.Kind is FileSystemHandleKind.Directory)
+                    {
+                        var fileSystemDirectoryHandle = await dir.GetDirectoryHandleAsync(value.Name);
 
-        // Start recursive function with the top of the tree
-        LoadSubgroups(allGroups, null);
+                        var innerValues = await fileSystemDirectoryHandle.ValuesAsync();
+                        foreach (var innerValue in innerValues)
+                        {
+                            var pFolder = SearchParentFolders(directoryBase, value.Name);
+                            if (innerValue.Kind is FileSystemHandleKind.File)
+                            {
+                                
+                                pFolder?.Files.Add( innerValue.Name );
+                            }
+                            else
+                            {
+                                //Add to the logic structure
+                                pFolder?.SubFolders.Add(new Folder() { Name = innerValue.Name });
+                                var innerEntity = new Entity(innerValue.Kind, innerValue);
+                                entity.Children.Add(innerEntity);
 
-        allGroups = allGroups.Where(x => x.ParentFolder == null).ToList();
-    
-        return allGroups;
+                                queue.Enqueue((innerEntity, fileSystemDirectoryHandle, innerValue));
+                            }
+                        }
+                    }
+                    StateHasChanged();
+                }
+                Groups = directoryBase;
+            }
+        }
     }
 
-    private List<Folder> LoadSubgroups(List<Folder> allGroups, Folder? parentGroup)
+    protected class Entity
     {
-        var groups = allGroups.Where(x => x.ParentFolderId == parentGroup?.ParentFolderId).ToList();
+        public Entity(FileSystemHandleKind Kind, FileSystemHandle? Handle)
+        {
+            this.Kind = Kind;
+            this.Handle = Handle;
+            Children = new();
+        }
+        public FileSystemHandleKind Kind { get; set; }
+        public FileSystemHandle? Handle { get; set; }
+        public ulong Size { get; set; }
+        public List<Entity> Children { get; set; }
+    }
 
-        foreach (var group in groups)
-            group.SubFolders = LoadSubgroups(allGroups, group);
+    public List<Folder> Groups { get; set; } = new List<Folder>();
 
-        return groups;
+    private Folder? SearchParentFolders(List<Folder> allFolders, string? parentName)
+    {
+        foreach (var folder in allFolders)
+        {
+            if (folder.Name == parentName)
+            {
+                return folder;
+            }
+            else
+            {
+                var found = SearchParentFolders(folder.SubFolders, parentName);
+                if(found != null)
+                {
+                    return found;
+                }
+            }
+        }
+
+        return null;
     }
 }

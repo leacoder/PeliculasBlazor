@@ -1,11 +1,25 @@
 ﻿<li>
     <div class="item-container">
-        @if (Group.SubFolders.Any())
+        @if (Folder.SubFolders.Any())
         {
-            @if (Group.IsExpanded)
+            @if (Folder.IsExpanded)
             {
                 <span class="oi oi-arrow-top" aria-hidden="true" style="transform: rotate(180deg)" 
                     @onclick="ToggleGroup"></span>
+                @if(Folder.Files.Any())
+                {
+                    <li>
+                    @foreach(var file in Folder.Files)
+                    {
+                        <div class="item-container">
+                        <div style="display: inline-block" @onclick="ToggleGroup">
+                            <span class="oi oi-file" aria-hidden="true"></span>
+                            <div style="display: inline-block">@file</div>
+                        </div>
+                        </div>
+                    }
+                    </li>
+                } 
             }
             else
             {
@@ -13,35 +27,39 @@
                     @onclick="ToggleGroup"></span>
             }
         }
-         <span class="oi oi-arrow-top" aria-hidden="true"
+
+        <span class="oi oi-arrow-top" aria-hidden="true"
          style="cursor: pointer; 
-                 @(Group.SubFolders.Any() ? "" : "padding-left: 18px")
+                 @(Folder.SubFolders.Any() ? "" : "padding-left: 18px")
                  @(allEntriesSelected ? "check_box" : "check_box_outline_blank")"></span> 
 
         <div style="display: inline-block" @onclick="ToggleGroup">
             <span class="oi oi-folder" aria-hidden="true"></span>
-            <div style="display: inline-block">@Group.Name</div>
+            <div style="display: inline-block">@Folder.Name</div>
+
+
         </div>
     </div>
 
-    @if (Group.SubFolders.Any() && Group.IsExpanded)
+    @if (Folder.SubFolders.Any() && Folder.IsExpanded)
     {
         <ul>
-        @foreach (var subGroup in Group.SubFolders)
+        @foreach (var subFolder in Folder.SubFolders)
         {
-            <GroupItemComponent Group="subGroup"/>
+            <GroupItemComponent Folder="subFolder"/>
+
         }
         </ul>
     }
 </li>
 
 @code {
-    [Parameter] public Folder Group { get; set; }
+    [Parameter] public Folder Folder { get; set; }
 
     public bool allEntriesSelected { get; set; }
 
     async Task ToggleGroup()
     {
-        Group.IsExpanded = !Group.IsExpanded;
+        Folder.IsExpanded = !Folder.IsExpanded;
     }
 }
