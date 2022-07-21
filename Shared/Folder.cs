@@ -14,7 +14,7 @@ namespace BlazorApp1.Shared
         public Folder? ParentFolder { get; set; }
         public virtual List<Folder> SubFolders { get; set; } = new List<Folder>();
         public virtual List<string> Files { get; set; } = new List<string>();
-        public bool IsExpanded { get; set; }
+        public bool IsExpanded { get; set; } = false;
     }
 
     public class FileM

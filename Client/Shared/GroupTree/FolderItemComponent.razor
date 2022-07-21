@@ -1,7 +1,7 @@
 ﻿<li>
     <div class="item-container">
-        @if (Folder.SubFolders.Any())
-        {
+@*        @if (Folder.SubFolders.Any())
+        {*@
             @if (Folder.IsExpanded)
             {
                 <span class="oi oi-arrow-top" aria-hidden="true" style="transform: rotate(180deg)" 
@@ -13,9 +13,9 @@
                 <span class="oi oi-arrow-top" aria-hidden="true" style="transform: rotate(90deg)" 
                     @onclick="ToggleGroup"></span>
             }
-        }
+        @*}*@
 
-        <span class="oi oi-arrow-top" aria-hidden="true"
+        <span 
          style="cursor: pointer; 
                  @(Folder.SubFolders.Any() ? "" : "padding-left: 18px")
                  @(allEntriesSelected ? "check_box" : "check_box_outline_blank")"></span> 
@@ -28,7 +28,7 @@
         </div>
     </div>
 
-    @if (Folder.SubFolders.Any() && Folder.IsExpanded)
+    @if ((Folder.SubFolders.Any() || Folder.Files.Any() ) && Folder.IsExpanded)
     {
         <ul>
         @foreach (var subFolder in Folder.SubFolders)
@@ -36,8 +36,9 @@
             <FolderItemComponent Folder="subFolder"/>
 
         }
-        @if(Folder.Files.Any() && Folder.IsExpanded)
+        @if(Folder.Files.Any())
         {
+
             <li>
             @foreach(var file in Folder.Files)
             {
@@ -51,9 +52,7 @@
         </ul>
     }
 
-    
 </li>
-
 @code {
     [Parameter] public Folder Folder { get; set; }
 
