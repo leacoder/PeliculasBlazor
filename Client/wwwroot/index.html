@@ -9,6 +9,39 @@
     <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
     <link href="css/app.css" rel="stylesheet" />
     <link href="BlazorApp1.Client.styles.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://blazor.cdn.telerik.com/blazor/3.3.0/kendo-theme-default/all.css" />
+
+    <script src="https://blazor.cdn.telerik.com/blazor/3.3.0/telerik-blazor.min.js" defer></script>
+
+
+    <script>
+        async function readData() {
+            const out = [];
+            const dirHandle = await showDirectoryPicker();
+            await handleDirectoryEntry(dirHandle, out);
+            console.log(out);
+            return out;
+        }
+
+        async function handleDirectoryEntry(dirHandle, out) {
+            var index = 0;
+            for await (const entry of dirHandle.values()) {
+                if (entry.kind === "file") {
+                    const file = await entry.getFile();
+                    const fileContentObject = await file.stream().getReader().read();
+                    out[index] = { "type": "file", "name": entry.name, "content": fileContentObject, "children": [] };
+                    index++;
+                }
+                if (entry.kind === "directory") {
+                    const newOut = out[index] = { "type": "directory", "name": entry.name, "content": null, "children": [] };
+                    index++;
+                    await handleDirectoryEntry(entry, newOut.children);
+                }
+            }
+        }
+
+    </script>
+
 </head>
 
 <body>

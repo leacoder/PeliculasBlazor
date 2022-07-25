@@ -25,11 +25,9 @@
 <p>
     <label>
         Upload up to @maxAllowedFiles of up to @maxFileSize bytes:
-        <InputFile OnChange="@LoadFiles" multiple
-                               webkitdirectory
-                               directory onselect="@LoadFiles" />
+        <InputFile OnChange="@LoadFiles"  onselect="@LoadFiles" />
     </label>
-</p>
+</p>B
 @*<button @onClick="@SubmitFiles">Submit</button>*@
 
 @if (isLoading)
@@ -57,7 +55,7 @@ else
     private List<IBrowserFile> loadedFiles = new();
     //private List<File> files = new();
     private List<UploadResult> uploadResults = new();
-    private long maxFileSize = 1024 * 15;
+    private long maxFileSize = 1024 * 1000000;
     private int maxAllowedFiles = 3;
     private bool isLoading;
     //private bool shouldRender= true;

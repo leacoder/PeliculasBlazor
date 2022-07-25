@@ -39,15 +39,19 @@
         @if(Folder.Files.Any())
         {
 
-            <li>
+            
             @foreach(var file in Folder.Files)
             {
-                <div class="item-container">
-                    <span class="oi oi-file" aria-hidden="true"></span>
-                    <div style="display: inline-block">@file</div>
-                </div>
+                <li>
+                    <div class="item-container">
+                        <span class="oi oi-file" aria-hidden="true"></span>
+                        <div style="display: inline-block">@file.Name  </div>
+                        <div style="display: inline-block">
+                        <text style="padding-left: 10px;"><b> Path:  </b>@file.Path</text>
+                        </div>
+                    </div>
+                </li>
             }
-            </li>
         } 
         </ul>
     }

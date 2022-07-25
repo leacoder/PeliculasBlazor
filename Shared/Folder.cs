@@ -13,11 +13,11 @@ namespace BlazorApp1.Shared
         public string? Description { get; set; }
         public Folder? ParentFolder { get; set; }
         public virtual List<Folder> SubFolders { get; set; } = new List<Folder>();
-        public virtual List<string> Files { get; set; } = new List<string>();
+        public virtual List<FileManaged> Files { get; set; } = new List<FileManaged>();
         public bool IsExpanded { get; set; } = false;
     }
 
-    public class FileM
+    public class FileManaged
     {
         public Guid Id { get; set; }
 

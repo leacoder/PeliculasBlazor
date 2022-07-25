@@ -1,0 +1,32 @@
+<!-- The `multiple` attribute lets users select multiple files. -->
+<input type="file" id="file-selector" multiple>
+<script>
+  const fileSelector = document.getElementById('file-selector');
+  fileSelector.addEventListener('change', (event) => {
+    const fileList = event.target.files;
+	
+	for(i=0; i < fileList.lenght;i++)
+	{
+		readImage(file[i]);
+	}
+	
+    
+  });
+  
+  function readImage(file) {
+  // Check if the file is an image.
+  if (file.type && !file.type.startsWith('image/')) {
+    console.log('File is not an image.', file.type, file);
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.addEventListener('load', (event) => {
+    img.src = event.target.result;
+  });
+  reader.readAsDataURL(file);
+  
+  console.log(file);
+	console.log(img);
+}
+</script>

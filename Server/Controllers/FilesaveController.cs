@@ -30,7 +30,7 @@ namespace BlazorApp1.Server.Controllers
             [FromForm] IEnumerable<IFormFile> files)
         {
             var maxAllowedFiles = 3;
-            long maxFileSize = 1024 * 1000;
+            long maxFileSize = 1024 * 2000000;
             var filesProcessed = 0;
             var resourcePath = new Uri($"{Request.Scheme}://{Request.Host}/");
             List<UploadResult> uploadResults = new();

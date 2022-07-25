@@ -1,14 +1,32 @@
-﻿@page "/foldertree"
+﻿@page "/"
+@using System.Text
 @inject FileSystemAccessService FileSystemAccessService;
+@using BlazorApp1.Shared
 
-<h3>FolderTreeComponent</h3>
-
-<FolderTreeComponent Folders="@Folders" />
+<h3>Folder Tree Component</h3>
 
 <button @onclick="OpenDictoryPicker">Open Directory Picker</button>
 <br />
+<div class="container">
+    <div class="row">
+        <div class="col-sm">
+            <FolderTreeComponent Folders="@Folders" />
+        </div>
+        <div class="col-sm">
+            <TelerikTreeView Data="@FlatFolders"
+                             @bind-ExpandedItems="@ExpandedItems"
+                             SelectionMode="@SelectionMode">
+                <TreeViewBindings>
+                    <TreeViewBinding ParentIdField="Parent"></TreeViewBinding>
+                </TreeViewBindings>
+            </TelerikTreeView>
+        </div>
+    </div>
+</div>
 
 @code {
+    public TreeViewSelectionMode SelectionMode { get; set; } = TreeViewSelectionMode.Multiple;
+    public IEnumerable<object> ExpandedItems { get; set; }
     private FileSystemDirectoryHandle? directoryHandle = null;
     private int entitiesChecked = 0;
     private Entity rootEntity = new(FileSystemHandleKind.Directory, null);
@@ -29,10 +47,9 @@
             if (directoryHandle != null)
             {
                 //Create folder base
-                var directoryBase = new List<Folder>()
-                {
-                    new Folder(){ Name = directoryHandle.Name }
-                };
+                var directoryId = 1;
+                var directoryBase = new List<Folder>() { new Folder(){ Name = directoryHandle.Name } };
+                var directoryFlat = new List<FlatFolder>() { new FlatFolder() { Text = directoryHandle.Name, Id = directoryId, Parent = null, Icon = ElementType.folder.ToString() } };
                 var values = await directoryHandle.ValuesAsync();
 
                 entitiesChecked = 0;
@@ -42,17 +59,26 @@
                 {
                     if (value.Kind is FileSystemHandleKind.File)
                     {
-                        directoryBase.First().Files.Add( value.Name );
+                        string path = GetPath(directoryBase.First(), value.Name);
+                        directoryBase.First().Files.Add( new FileManaged() { Name = value.Name, Path = path });
+                        var flatBaseDirectory = directoryFlat.First();
+                        directoryFlat.Add(new FlatFolder() { Text = value.Name, Parent = flatBaseDirectory.Id, HasChildren = false, Icon = ElementType.file.ToString() });
                         //var content = File
                     }
                     else if( value.Kind is FileSystemHandleKind.Directory)
                     {
-                        directoryBase.First().SubFolders.Add(new Folder() { Name = value.Name  }); 
+                        directoryBase.First().SubFolders.Add(new Folder() { Name = value.Name, ParentFolder = directoryBase.First()  });
+                        var flatBaseDirectory = directoryFlat.First();
+                        flatBaseDirectory.HasChildren = true;
+                        directoryId++;
+                        directoryFlat.Add(new FlatFolder() { Text = value.Name, Parent = flatBaseDirectory.Id, Id = directoryId, Icon = ElementType.folder.ToString() });
+
+
                         var entity = new Entity(value.Kind, value);
                         rootEntity.Children.Add(entity);
                         queue.Enqueue((entity, directoryHandle, value));
                     }
-                    
+
                     entitiesChecked++;
                     StateHasChanged();
                 }
@@ -66,9 +92,11 @@
                         File file = await fileSystemHandle.GetFileAsync();
                         entity.Size = file.Size;
                         //Add file to logic structure
-                        //file
-                        var parentFolder = SearchParentFolders(directoryBase, dir.Name);
-                        parentFolder?.Files.Add( value.Name );
+                        //var parentFolder = SearchParentFolders(directoryBase, dir.Name);
+
+                        //string path = GetPath(parentFolder, value.Name);
+                        //parentFolder?.Files.Add( new FileManaged() { Name = value.Name } );
+
                     }
                     else if (value.Kind is FileSystemHandleKind.Directory)
                     {
@@ -80,13 +108,19 @@
                             var pFolder = SearchParentFolders(directoryBase, value.Name);
                             if (innerValue.Kind is FileSystemHandleKind.File)
                             {
-                                
-                                pFolder?.Files.Add( innerValue.Name );
+                                string path = GetPath(pFolder, innerValue.Name);
+                                pFolder?.Files.Add( new FileManaged() { Name = innerValue.Name, Path = path });
+                                var parentFlatId = GetParentId(directoryFlat, value.Name);
+                                directoryFlat.Add(new FlatFolder() { Text = innerValue.Name, Parent = parentFlatId, HasChildren = false, Icon = ElementType.file.ToString() });
                             }
                             else
                             {
                                 //Add to the logic structure
-                                pFolder?.SubFolders.Add(new Folder() { Name = innerValue.Name });
+                                pFolder?.SubFolders.Add(new Folder() { Name = innerValue.Name, ParentFolder = pFolder });
+                                directoryId++;
+                                var parentFlatId = GetParentId(directoryFlat, value.Name);
+                                directoryFlat.Add(new FlatFolder() { Text = innerValue.Name, Parent = parentFlatId, HasChildren = true, Id = directoryId, Icon = ElementType.folder.ToString() });
+
                                 var innerEntity = new Entity(innerValue.Kind, innerValue);
                                 entity.Children.Add(innerEntity);
 
@@ -97,8 +131,32 @@
                     StateHasChanged();
                 }
                 Folders = directoryBase;
+                ExpandedItems = directoryFlat;
+                FlatFolders = directoryFlat;
             }
         }
+    }
+
+    private int GetParentId(List<FlatFolder> directoryFlat, string directoryName)
+    {
+        var parentFlatFolder = directoryFlat.First(x => x.Text == directoryName);
+        parentFlatFolder.HasChildren = true;
+
+        return parentFlatFolder.Id;
+    }
+
+    private string GetPath(Folder folder, string fileName)
+    {
+        Folder parentFolder = new Folder();
+        StringBuilder path = new StringBuilder(  fileName );
+
+        do
+        {
+            path.Insert(0, $"{folder.Name}/");
+            folder = folder.ParentFolder;
+        } while (folder != null );
+
+        return path.ToString();
     }
 
     protected class Entity
@@ -116,6 +174,7 @@
     }
 
     public List<Folder> Folders { get; set; } = new List<Folder>();
+    public List<FlatFolder> FlatFolders { get; set; } = new List<FlatFolder>();
 
     private Folder? SearchParentFolders(List<Folder> allFolders, string? parentName)
     {

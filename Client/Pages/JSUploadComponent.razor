@@ -1,0 +1,80 @@
+﻿@page "/foldertreejs"
+@using System.Net.Http.Headers
+@inject ILogger<UploadDataBackComponent> Logger
+@inject IJSRuntime JS
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+
+<PageTitle>Read File</PageTitle>
+
+@if (fileHandle is null)
+{
+    <button @onclick="OpenFilePicker" class="btn btn-primary">Open Directory Picker</button>
+}
+<container>
+<TelerikTreeView Data="@HierarchicalData" @bind-ExpandedItems="@ExpandedItems">
+    <TreeViewBindings>
+        <TreeViewBinding TextField="Name" ItemsField="Children" >
+            <TreeViewBinding Level="1" TextField="ProductName"></TreeViewBinding>
+        </TreeViewBinding>   
+    </TreeViewBindings>
+</TelerikTreeView>
+</container>
+
+@code {
+        public IEnumerable<TreeItem> HierarchicalData { get; set; }
+        public IEnumerable<Object> ExpandedItems { get; set; }
+        private string? fileText;
+        private FileSystemFileHandle? fileHandle;
+        private PermissionState readPermissionState;
+        private PermissionState writePermissionState;
+        private List<File> files = new();
+        private class File
+        {
+            public string? Name { get; set; }
+        }
+        private async Task OpenFilePicker()
+        {
+            var treeDirectory = await JS.InvokeAsync<TreeItem[]>("readData");
+
+            //Console.WriteLine("Console blazor");
+            //TreeItem[] treeDirectory = JsonSerializer.Deserialize<TreeItem[]>(result);
+
+            //using var content = new MultipartFormDataContent();
+
+            HierarchicalData = treeDirectory.ToList();
+            ExpandedItems = treeDirectory.Take(1).ToList();
+
+
+            //var fileContent = new StreamContent(treeDirectory[2].Content);
+
+            //fileContent.Headers.ContentType = new MediaTypeHeaderValue(treeDirectory[2].Type);
+
+            //files.Add(new() { Name = treeDirectory[2].Name });
+
+            //content.Add(
+            //    content: fileContent,
+            //    name: "\"files\"",
+            //    fileName: treeDirectory[2].Name);
+        }
+
+        public class TreeItem
+        {
+            public string Type { get; set; }
+            public string Name { get; set; }
+            public dynamic Content { get; set; }
+            public TreeItem[] Children { get; set; }
+        }
+
+        private async Task RequestWriteAccess()
+        {
+            if (fileHandle is null) return;
+            writePermissionState = await fileHandle.RequestPermission(new() { Mode = FileSystemPermissionMode.ReadWrite });
+        }
+        
+        private async Task RequestReadAccess()
+        {
+            if (fileHandle is null) return;
+            readPermissionState = await fileHandle.RequestPermission(new() { Mode = FileSystemPermissionMode.Read });
+        }
+}

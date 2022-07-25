@@ -1,0 +1,56 @@
+﻿@page "/foldertreeview"
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+
+<TelerikTreeView Data="@HierarchicalData" @bind-ExpandedItems="@ExpandedItems">
+    <TreeViewBindings>
+        <TreeViewBinding TextField="Name" ItemsField="SubFolders" >
+
+        </TreeViewBinding>   
+    </TreeViewBindings>
+</TelerikTreeView>
+
+@code {
+    public IEnumerable<Folder> HierarchicalData { get; set; }
+    public IEnumerable<Object> ExpandedItems { get; set; }
+
+    protected override void OnInitialized()
+    {
+        LoadHierarchical();
+    }
+
+    private void LoadHierarchical()
+    {    
+
+
+        List<Folder> subfolders = new List<Folder>()
+        {
+            new Folder { Name = "Another Folfder" , Files = new List<FileManaged>() { new FileManaged() { Name = "logo.jpg" }} },
+            new Folder { Name = "Folder 2" },
+        };
+
+        List<Folder> Subfolders1 = new List<Folder>()
+        {
+            new Folder { Name = "Child Foder"  },
+            new Folder { Name = "Another Child Folder", SubFolders = subfolders }
+        };
+
+        List<Folder> roots = new List<Folder>();
+
+        roots.Add(new Folder
+        {
+            Name = "folder base",
+            SubFolders = Subfolders1,
+            Files = new List<FileManaged>() { new FileManaged() { Name = "logo.jpg" } }
+        });
+
+        roots.Add(new Folder
+        {
+            Name = "folder base",
+            SubFolders = Subfolders1,
+            Files = new List<FileManaged>() { new FileManaged() { Name = "logo.jpg" } }
+        });
+        HierarchicalData = roots;
+        ExpandedItems = roots.First().SubFolders.Take(1);
+    }
+}
