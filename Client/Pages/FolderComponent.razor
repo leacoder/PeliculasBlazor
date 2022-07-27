@@ -4,32 +4,84 @@
 @using BlazorApp1.Shared
 
 <h3>Folder Tree Component</h3>
+<div class="container">
+    <div class="row">
+        1- Select directory:
+        <button  type="button" class="btn btn-primary" style="width: 250px; margin-left:20px" @onclick="OpenDictoryPicker">Upload Folder structure</button>
+    </div>
+    @if (FlatFolders.Any())
+    {
+    <div class="row">
+        2- Upload directory: 
+        <div class="file-input-zone">
+            <InputFile title="Upload Directory" OnChange="@UploadFilesFolder" multiple
+                               webkitdirectory
+                               directory/> 
+        </div>
+    </div>
+    }
 
-<button @onclick="OpenDictoryPicker">Open Directory Picker</button>
+</div>
 <br />
 <div class="container">
     <div class="row">
-        <div class="col-sm">
+@*        <div class="col-sm-4">
             <FolderTreeComponent Folders="@Folders" />
-        </div>
-        <div class="col-sm">
-            <TelerikTreeView Data="@FlatFolders"
-                             @bind-ExpandedItems="@ExpandedItems"
-                             SelectionMode="@SelectionMode">
+        </div>*@
+        <div class="col-sm-6">
+            <TelerikTreeView Data="@FlatFolders" @bind-ExpandedItems="@ExpandedItems" SelectionMode="@SelectionMode" @bind-SelectedItems="@SelectedItems">
                 <TreeViewBindings>
                     <TreeViewBinding ParentIdField="Parent"></TreeViewBinding>
                 </TreeViewBindings>
             </TelerikTreeView>
         </div>
+        <div class="col-sm-6">
+            @if (FlatFolders.Any())
+            {
+                
+            
+            <h6 class="kd-demo-heading mt-0">Selected Items:</h6>
+            @if (SelectedItems.Any())
+            {
+                <div class="card-container">
+                    @foreach (var item in SelectedItems)
+                    {
+                        <div class="k-card mr-sm mb-sm" style="width: 15rem">
+                            <div class="k-card-body">
+                                <div><strong>File Type:</strong> <TelerikIcon Icon="@((item as FlatFolder).Icon.ToString())" /></div>
+                                <div><strong>Title:</strong> @((item as FlatFolder).Text)</div>
+                                <div><strong>Id:</strong> @((item as FlatFolder).Id) </div>
+                                <div><strong>Parent Id:</strong> @((item as FlatFolder).Parent) </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            }
+        </div>
     </div>
 </div>
 
 @code {
+    public List<Folder> Folders { get; set; } = new List<Folder>();
+    public List<FlatFolder> FlatFolders { get; set; } = new List<FlatFolder>();
     public TreeViewSelectionMode SelectionMode { get; set; } = TreeViewSelectionMode.Multiple;
+    public IEnumerable<object> SelectedItems { get; set; } = new List<object>();
     public IEnumerable<object> ExpandedItems { get; set; }
     private FileSystemDirectoryHandle? directoryHandle = null;
     private int entitiesChecked = 0;
     private Entity rootEntity = new(FileSystemHandleKind.Directory, null);
+
+    private async Task UploadFilesFolder(InputFileChangeEventArgs e)
+    {
+        Console.WriteLine("File Input");
+        List<IBrowserFile> files = e.GetMultipleFiles().ToList();
+        foreach (var file in files)
+        {
+            Console.WriteLine(file.Name);
+        }
+        
+    }
 
     protected async Task OpenDictoryPicker()
     {
@@ -63,7 +115,6 @@
                         directoryBase.First().Files.Add( new FileManaged() { Name = value.Name, Path = path });
                         var flatBaseDirectory = directoryFlat.First();
                         directoryFlat.Add(new FlatFolder() { Text = value.Name, Parent = flatBaseDirectory.Id, HasChildren = false, Icon = ElementType.file.ToString() });
-                        //var content = File
                     }
                     else if( value.Kind is FileSystemHandleKind.Directory)
                     {
@@ -89,7 +140,7 @@
                     if (value.Kind is FileSystemHandleKind.File)
                     {
                         var fileSystemHandle = await dir.GetFileHandleAsync(value.Name);
-                        File file = await fileSystemHandle.GetFileAsync();
+                        var file = await fileSystemHandle.GetFileAsync();
                         entity.Size = file.Size;
                         //Add file to logic structure
                         //var parentFolder = SearchParentFolders(directoryBase, dir.Name);
@@ -173,8 +224,6 @@
         public List<Entity> Children { get; set; }
     }
 
-    public List<Folder> Folders { get; set; } = new List<Folder>();
-    public List<FlatFolder> FlatFolders { get; set; } = new List<FlatFolder>();
 
     private Folder? SearchParentFolders(List<Folder> allFolders, string? parentName)
     {

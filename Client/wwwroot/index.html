@@ -17,10 +17,14 @@
     <script>
         async function readData() {
             const out = [];
+            const outFolder = [];
             const dirHandle = await showDirectoryPicker();
-            await handleDirectoryEntry(dirHandle, out);
+            out[0] = { "id": 0, "type": "directory", "hasChildren": true, "folderName": dirHandle.name, "name": dirHandle.name, "content": null, "children": [] };
+            await handleDirectoryEntry(dirHandle, out[0].children);
+            await handleOnlyDirectoryEntry(dirHandle, outFolder);
             console.log(out);
-            return out;
+            console.log(outFolder);
+            return { 'FullTree': out, 'FolderTree': outFolder };
         }
 
         async function handleDirectoryEntry(dirHandle, out) {
@@ -28,17 +32,54 @@
             for await (const entry of dirHandle.values()) {
                 if (entry.kind === "file") {
                     const file = await entry.getFile();
+                    const fileBin = file.binaryData;
+                    debugger;
+                    console.log(file);
+                    console.log(file.data);
+                    console.log("file bin" + file.binaryData);
                     const fileContentObject = await file.stream().getReader().read();
-                    out[index] = { "type": "file", "name": entry.name, "content": fileContentObject, "children": [] };
+                    const filebytes = await file.arrayBuffer();
+                    console.log(filebytes);
+                    var reader = new FileReader();
+                    //var blob = new Blob(file.());
+                    //reader.readAsArrayBuffer(file.Blob);
+                    console.log(reader.result);
+                    var data;
+                    reader.onload = function (e) {
+                        // binary data
+                        data = e.target.result;
+                        console.log("target.result " + e.target.result);
+                    };
+                    reader.onerror = function (e) {
+                        // error occurred
+                        console.log('Error : ' + e.type);
+                    };
+                    const binaryData = await reader.readAsBinaryString(file);
+                    console.log("reading binary " + binaryData);
+                    out[index] = { "id": index, "type": "file", "hasChildren": false, "name": entry.name, "content": fileContentObject.value,  "children": []};
                     index++;
+                    
                 }
                 if (entry.kind === "directory") {
-                    const newOut = out[index] = { "type": "directory", "name": entry.name, "content": null, "children": [] };
-                    index++;
+                    const newOut = out[index] = { "id": index, "hasChildren": true, "type": "directory", "folderName": entry.name, "name": entry.name, "content": null, "children": [], "icon" : "folder" };
+                    index++; 
                     await handleDirectoryEntry(entry, newOut.children);
                 }
             }
         }
+
+        async function handleOnlyDirectoryEntry(dirHandle, outFolder) {
+            var index = 0;
+
+            for await (const entry of dirHandle.values()) {
+                if (entry.kind === "directory") {
+                    const newOut = outFolder[index] = { "id": index, "type": "directory", "name": entry.name, "content": null, "children": [] };
+                    index++;
+                    await handleOnlyDirectoryEntry(entry, newOut.children);
+                }
+            }
+        }
+    
 
     </script>
 
