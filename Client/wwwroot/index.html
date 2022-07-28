@@ -12,9 +12,10 @@
     <link rel="stylesheet" href="https://blazor.cdn.telerik.com/blazor/3.3.0/kendo-theme-default/all.css" />
 
     <script src="https://blazor.cdn.telerik.com/blazor/3.3.0/telerik-blazor.min.js" defer></script>
-
+    <script src="js/saveFile.js"></script>
 
     <script>
+
         async function readData() {
             const out = [];
             const outFolder = [];
@@ -23,7 +24,7 @@
             await handleDirectoryEntry(dirHandle, out[0].children);
             await handleOnlyDirectoryEntry(dirHandle, outFolder);
             console.log(out);
-            console.log(outFolder);
+            //console.log(outFolder);
             return { 'FullTree': out, 'FolderTree': outFolder };
         }
 
@@ -31,38 +32,40 @@
             var index = 0;
             for await (const entry of dirHandle.values()) {
                 if (entry.kind === "file") {
+                    //debugger;
                     const file = await entry.getFile();
-                    const fileBin = file.binaryData;
-                    debugger;
+                    //const fileBin = file.binaryData;
                     console.log(file);
                     console.log(file.data);
-                    console.log("file bin" + file.binaryData);
+                    //debugger;
+                    //console.log("file bin" + file.binaryData);
                     const fileContentObject = await file.stream().getReader().read();
-                    const filebytes = await file.arrayBuffer();
-                    console.log(filebytes);
-                    var reader = new FileReader();
+                    //debugger;
+                    //const filebytes = await file.arrayBuffer();
+                    //console.log(filebytes);
+                    //var uint8View = new Uint8Array(filebytes);
+                    //var reader = new FileReader();
                     //var blob = new Blob(file.());
                     //reader.readAsArrayBuffer(file.Blob);
-                    console.log(reader.result);
-                    var data;
-                    reader.onload = function (e) {
-                        // binary data
-                        data = e.target.result;
-                        console.log("target.result " + e.target.result);
-                    };
-                    reader.onerror = function (e) {
-                        // error occurred
-                        console.log('Error : ' + e.type);
-                    };
-                    const binaryData = await reader.readAsBinaryString(file);
-                    console.log("reading binary " + binaryData);
-                    out[index] = { "id": index, "type": "file", "hasChildren": false, "name": entry.name, "content": fileContentObject.value,  "children": []};
+                    //console.log(reader.result);
+                    //var data;
+                    //reader.onload = function (e) {
+                    //    // binary data
+                    //    data = e.target.result;
+                    //    console.log("target.result " + e.target.result);
+                    //};
+                    //reader.onerror = function (e) {
+                    //    // error occurred
+                    //    console.log('Error : ' + e.type);
+                    //};
+                    //const binaryData = await reader.readAsBinaryString(file);
+                    //console.log("reading binary " + binaryData);
+                    out[index] = { "id": index, "type": "file", "hasChildren": false, "name": entry.name, "content": fileContentObject.value, "children": [] };
                     index++;
-                    
                 }
                 if (entry.kind === "directory") {
-                    const newOut = out[index] = { "id": index, "hasChildren": true, "type": "directory", "folderName": entry.name, "name": entry.name, "content": null, "children": [], "icon" : "folder" };
-                    index++; 
+                    const newOut = out[index] = { "id": index, "hasChildren": true, "type": "directory", "folderName": entry.name, "name": entry.name, "content": null, "children": [], "icon": "folder" };
+                    index++;
                     await handleDirectoryEntry(entry, newOut.children);
                 }
             }
@@ -79,7 +82,7 @@
                 }
             }
         }
-    
+
 
     </script>
 

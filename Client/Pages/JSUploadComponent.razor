@@ -2,15 +2,14 @@
 @using System.Net.Http.Headers
 @inject ILogger<UploadDataBackComponent> Logger
 @inject IJSRuntime JS
+@using System.Text
 @using Telerik.Blazor
 @using Telerik.Blazor.Components
 
-<PageTitle>Read File</PageTitle>
+<PageTitle>Read File from JS</PageTitle>
 
-@if (fileHandle is null)
-{
-    <button @onclick="OpenFilePicker" class="btn btn-primary">Open Directory Picker</button>
-}
+<button @onclick="OpenFilePicker" class="btn btn-primary">Open Directory Picker</button>
+
 <br/><br/>
 <container>
 <TelerikTreeView Data="@HierarchicalData" @bind-ExpandedItems="@ExpandedItems" SelectionMode="@TreeViewSelectionMode.Single"
@@ -34,22 +33,22 @@
             {
                 <li>
                     <text>@item.Name.ToString()</text>
+                    @*<text>@item.Size.ToString()</text>*@
                 </li>
             }
-            
         }
         </ul>
     </div>
 }
+
 </container>
 
 @code {
     public IEnumerable<TreeItem> HierarchicalData { get; set; }
     public IEnumerable<Object> ExpandedItems { get; set; }
     private string? fileText;
-    private FileSystemFileHandle? fileHandle;
-    private PermissionState readPermissionState;
-    private PermissionState writePermissionState;
+    public IEnumerable<object> SelectedItems { get; set; } = new List<object>();
+
 
     private async Task OpenFilePicker()
     {
@@ -58,10 +57,12 @@
         //Console.WriteLine("Console blazor");
         //TreeItem[] treeDirectory = JsonSerializer.Deserialize<TreeItem[]>(result);
 
-        var resuult = treeDirectory.FullTree[0].Children[3].Content;
+        //var biteArray = treeDirectory.FullTree[0].Children[0].Content;
 
-        using var content =  new MultipartFormDataContent();
-
+        foreach (var item in treeDirectory.FullTree.First().Children)
+        {
+            DownloadFile(item.Name,  Encoding.Default.GetString(item.Content) );    
+        }
 
         HierarchicalData = treeDirectory.FullTree.ToList();
 
@@ -81,14 +82,20 @@
         //    fileName: treeDirectory[2].Name);
     }
 
+    public async void DownloadFile(string fileName, string content)
+    {
+         var algo = await JS.InvokeAsync<object>("saveFile", fileName, content); 
+    }
+
     public class Trees
     {
-        public TreeItem[] FolderTree { get; set; }
-        public TreeItem[] FullTree { get; set; }
+        public List<TreeItem> FolderTree { get; set; }
+        public List<TreeItem> FullTree { get; set; }
     }
 
     public class TreeItem
     {
+        public List<TreeItem> Children { get; set; }
         public string Type { get; set; }
         public string Name { get; set; }
         public string FolderName { get; set; }
@@ -97,15 +104,8 @@
         public string Text { get; set; }
         public string Icon { get; set; }
         public int? Parent { get; set; }
-        public byte[] Content { get; set; }
-        public TreeItem[] Children { get; set; }
+        public byte[] Content { get; set; }        
     }
-    public IEnumerable<object> SelectedItems { get; set; } = new List<object>();
-
-    //public T ToObject<T>(this JsonElement element)
-    //{
-    //    var json = element.GetRawText();
-    //    return JsonSerializer.Deserialize<T>(json);
-    //}
+    
 
 }
