@@ -25,6 +25,31 @@ namespace BlazorApp1.Server.Controllers
             this.logger = logger;
         }
 
+        [HttpPost("AppendFile/{fragment}")]
+        public async Task<bool> UploadFileChunk(int fragment, IFormFile file)
+        {
+            try
+            {
+                var fileName = @"C:\TEMP\" + file.FileName;
+
+                if (fragment == 0 && System.IO.File.Exists(fileName))
+                {
+                    System.IO.File.Delete(fileName);
+                }
+                using (var fileStream = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.None))
+                using (var bw = new BinaryWriter(fileStream))
+                {
+                    await file.CopyToAsync(fileStream);
+                }
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("Exception: {0}", exception.Message);
+            }
+            return false;
+        }
+
         [HttpPost]
         public async Task<ActionResult<IList<UploadResult>>> PostFile(
             [FromForm] IEnumerable<IFormFile> files)

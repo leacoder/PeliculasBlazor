@@ -16,19 +16,19 @@
 
     <script>
 
-        async function readData() {
+        async function readData(dotNetRef) {
             const out = [];
             const outFolder = [];
             const dirHandle = await showDirectoryPicker();
             out[0] = { "id": 0, "type": "directory", "hasChildren": true, "folderName": dirHandle.name, "name": dirHandle.name, "content": null, "children": [] };
-            await handleDirectoryEntry(dirHandle, out[0].children);
+            await handleDirectoryEntry(dirHandle, out[0].children, dotNetRef);
             await handleOnlyDirectoryEntry(dirHandle, outFolder);
             console.log(out);
             //console.log(outFolder);
             return { 'FullTree': out, 'FolderTree': outFolder };
         }
 
-        async function handleDirectoryEntry(dirHandle, out) {
+        async function handleDirectoryEntry(dirHandle, out, dotNetRef) {
             var index = 0;
             async function getAsByteArray(file) {
                 //debugger;
@@ -37,7 +37,7 @@
             function readFile(file) {
                 return new Promise((resolve, reject) => {
                     // Create file reader
-                    
+
                     let reader = new FileReader()
 
                     // Register event listeners
@@ -65,69 +65,54 @@
                 return buffer;
             }
 
-           async function createChunk(videoId, start, end, file, chunkSize, chunkCounter, numberofChunks) {
+            async function createChunk(videoId, start, end, file, chunkSize, chunkCounter, numberofChunks, dotNetRef) {
                 while (chunkCounter < numberofChunks) {
                     chunkCounter++;
                     console.log("created chunk: ", chunkCounter);
                     chunkEnd = Math.min(start + chunkSize, file.size);
-                    //let reader2 = new FileReader()
-
                     const chunk = file.slice(start, chunkEnd);
-
-                    //const byteFile = await getAsByteArray(chunk);
                     const algo1 = await getAsByteArray(chunk);
-                  
-                    DotNet.invokeMethodAsync('BlazorApp1.Client', 'ReturnArrayAsync', algo1)
-                       .then(data => {
-                           console.log(data);
-                            });
-                   
-                    console.log("i created a chunk of file" + start + "-" + chunkEnd + "minus 1	");
-                    start = chunkEnd;
-                    const chunkForm = new FormData();
-                    if (videoId.length > 0) {
-                        //we have a videoId
-                        chunkForm.append('videoId', videoId);
-                        console.log("added videoId");
+                    await dotNetRef.invokeMethodAsync('ReturnArrayAsync', algo1, chunkCounter)
+                        .then(data => {
+                            console.log(data);
+                        });
 
-                    }
-                    chunkForm.append('file', chunk, file.name);
-                    console.log("added file");
+                    start = chunkEnd;
                 }
-               
+
                 //created the chunk, now upload iit
-               // uploadChunk(chunkForm, start, chunkEnd);
+                // uploadChunk(chunkForm, start, chunkEnd);
             }
 
             for await (const entry of dirHandle.values()) {
                 if (entry.kind === "file") {
                     //debugger;
                     const file = await entry.getFile();
-                   /* const fileBin = file.binaryData;*/
-                   // const reader = new FileReader();
-                   // var rs = new ReadableStream({ type: 'bytes' });
-                   // const reader2 = rs.getReader({ mode: "byob" });
-                   //// const reader = readableStream.getReader();
+                    /* const fileBin = file.binaryData;*/
+                    // const reader = new FileReader();
+                    // var rs = new ReadableStream({ type: 'bytes' });
+                    // const reader2 = rs.getReader({ mode: "byob" });
+                    //// const reader = readableStream.getReader();
 
-                   //// const reader2 = file.getReader();
+                    //// const reader2 = file.getReader();
 
-                   // const startingAB = await new Response(file).arrayBuffer();
-                   // const buffer = await readInto(startingAB, reader2);
-                   // console.log("The first 1024 bytes, or less:", buffer);
+                    // const startingAB = await new Response(file).arrayBuffer();
+                    // const buffer = await readInto(startingAB, reader2);
+                    // console.log("The first 1024 bytes, or less:", buffer);
                     var chunkCounter = 0;
                     //break into 5 MB chunks fat minimum
-                    const chunkSize = 60000000;
-                   
-                   
+                    const chunkSize = 20000000;
+
+
                     var numberofChunks = Math.ceil(file.size / chunkSize);
                     console.log("There will be " + numberofChunks + " chunks uploaded.");
 
                     var start = 0;
                     var chunkEnd = start + chunkSize;
                     //upload the first chunk to get the videoId
-                    await createChunk(1, start, undefined, file, chunkSize, chunkCounter, numberofChunks);
+                    await createChunk(1, start, undefined, file, chunkSize, chunkCounter, numberofChunks, dotNetRef);
 
-                   
+
                     //reader.onload = function (e) {
                     //    debugger;
                     //    let value = e.value;  // alternatively reader.result
@@ -137,9 +122,9 @@
                     //    return e.target.result;
 
                     //};
-                  // var algo =  await new Response(file).arrayBuffer();
-                   // await reader.readAsArrayBuffer(file);
-                   // console.log(reader.result);
+                    // var algo =  await new Response(file).arrayBuffer();
+                    // await reader.readAsArrayBuffer(file);
+                    // console.log(reader.result);
                     //const stream = file.stream();
                     //async function concatStringStream(stream) {
                     //    let result = '';
@@ -159,9 +144,6 @@
                     //    }
                     //}
                     //await concatStringStream(stream).then((result) => console.log('Stream complete', result));
-                    debugger;
-                    let charsReceived = 0;
-
                     // read() returns a promise that resolves
                     // when a value has been received
                     //  reader.read().then(function processText({ done, value }) {
@@ -189,9 +171,9 @@
                     //});
 
 
-                   // const byteFile = await getAsByteArray(file);
-                 
-                   // console.log(byteFile);
+                    // const byteFile = await getAsByteArray(file);
+
+                    // console.log(byteFile);
                     //console.log(file.data);
                     //console.log("file bin" + file.binaryData);
                     //const fileContentObject = await file.stream().getReader().read();
@@ -212,8 +194,8 @@
                     //    console.log('Error : ' + e.type);
                     //};
                     //const binaryData = await reader.readAsBinaryString(file);
-                   // debugger;
-                    out[index] = { "id": index, "type": "file", "hasChildren": false, "name": entry.name, "content": undefined,  "children": []};
+                    // debugger;
+                    out[index] = { "id": index, "type": "file", "hasChildren": false, "name": entry.name, "content": undefined, "children": [] };
                     index++;
                 }
                 if (entry.kind === "directory") {

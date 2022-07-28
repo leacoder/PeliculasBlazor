@@ -2,9 +2,11 @@
 @using System.Net.Http.Headers
 @inject ILogger<UploadDataBackComponent> Logger
 @inject IJSRuntime JS
+@inject HttpClient Http
 @using System.Text
 @using Telerik.Blazor
 @using Telerik.Blazor.Components
+
 
 <PageTitle>Read File from JS</PageTitle>
 
@@ -19,7 +21,6 @@
         @*<TreeViewBinding Level="1" TextField="Name"></TreeViewBinding>*@
     </TreeViewBindings>
 </TelerikTreeView>
-
 
 @if (SelectedItems.Any())
 {
@@ -46,9 +47,14 @@
 @code {
 
     [JSInvokable]
-    public static Task<int[]> ReturnArrayAsync(byte[] datos)
+    public Task<int[]> ReturnArrayAsync(byte[] datos, int fragment)
     {
-        int algo = 1;
+        using var formFile = new MultipartFormDataContent();
+        var fileContent = new StreamContent(new MemoryStream(datos));
+        formFile.Add(fileContent, "file", "test.txt");
+                
+        var response = Http.PostAsync($"Filesave/AppendFile/{fragment}", formFile);
+
         return Task.FromResult(new int[] { 1, 2, 3 });
     }
 
@@ -56,21 +62,31 @@
     public IEnumerable<Object> ExpandedItems { get; set; }
     private string? fileText;
     public IEnumerable<object> SelectedItems { get; set; } = new List<object>();
-
+      protected override void OnAfterRender(bool firstRender)
+      {
+        base.OnAfterRender(firstRender);
+        if (firstRender)
+        {
+          // See warning about memory above in the article
+          
+          //JS.InvokeVoidAsync("BlazorUniversity.startRandomGenerator", dotNetReference);
+        }
+      }
 
     private async Task OpenFilePicker()
     {
-        var treeDirectory = await JS.InvokeAsync<Trees>("readData");
+        var dotNetReference = DotNetObjectReference.Create(this);
+        var treeDirectory = await JS.InvokeAsync<Trees>("readData", dotNetReference);
 
         //Console.WriteLine("Console blazor");
         //TreeItem[] treeDirectory = JsonSerializer.Deserialize<TreeItem[]>(result);
 
         //var biteArray = treeDirectory.FullTree[0].Children[0].Content;
 
-        foreach (var item in treeDirectory.FullTree.First().Children)
-        {
-            DownloadFile(item.Name,  Encoding.Default.GetString(item.Content) );    
-        }
+        //foreach (var item in treeDirectory.FullTree.First().Children)
+        //{
+        //    DownloadFile(item.Name,  Encoding.Default.GetString(item.Content) );    
+        //}
 
         HierarchicalData = treeDirectory.FullTree.ToList();
 
