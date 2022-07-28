@@ -12,10 +12,9 @@
     <link rel="stylesheet" href="https://blazor.cdn.telerik.com/blazor/3.3.0/kendo-theme-default/all.css" />
 
     <script src="https://blazor.cdn.telerik.com/blazor/3.3.0/telerik-blazor.min.js" defer></script>
-    
+    <script src="js/saveFile.js"></script>
 
     <script>
-
 
         async function readData() {
             const out = [];
@@ -25,7 +24,7 @@
             await handleDirectoryEntry(dirHandle, out[0].children);
             await handleOnlyDirectoryEntry(dirHandle, outFolder);
             console.log(out);
-            console.log(outFolder);
+            //console.log(outFolder);
             return { 'FullTree': out, 'FolderTree': outFolder };
         }
 
@@ -38,7 +37,6 @@
             function readFile(file) {
                 return new Promise((resolve, reject) => {
                     // Create file reader
-                       debugger;
                     
                     let reader = new FileReader()
 
@@ -103,6 +101,7 @@
 
             for await (const entry of dirHandle.values()) {
                 if (entry.kind === "file") {
+                    //debugger;
                     const file = await entry.getFile();
                    /* const fileBin = file.binaryData;*/
                    // const reader = new FileReader();
@@ -216,11 +215,10 @@
                    // debugger;
                     out[index] = { "id": index, "type": "file", "hasChildren": false, "name": entry.name, "content": undefined,  "children": []};
                     index++;
-                    
                 }
                 if (entry.kind === "directory") {
-                    const newOut = out[index] = { "id": index, "hasChildren": true, "type": "directory", "folderName": entry.name, "name": entry.name, "content": null, "children": [], "icon" : "folder" };
-                    index++; 
+                    const newOut = out[index] = { "id": index, "hasChildren": true, "type": "directory", "folderName": entry.name, "name": entry.name, "content": null, "children": [], "icon": "folder" };
+                    index++;
                     await handleDirectoryEntry(entry, newOut.children);
                 }
             }
@@ -237,7 +235,7 @@
                 }
             }
         }
-    
+
 
     </script>
 
