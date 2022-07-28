@@ -44,6 +44,14 @@
 </container>
 
 @code {
+
+    [JSInvokable]
+    public static Task<int[]> ReturnArrayAsync(byte[] datos)
+    {
+        int algo = 1;
+        return Task.FromResult(new int[] { 1, 2, 3 });
+    }
+
     public IEnumerable<TreeItem> HierarchicalData { get; set; }
     public IEnumerable<Object> ExpandedItems { get; set; }
     private string? fileText;
