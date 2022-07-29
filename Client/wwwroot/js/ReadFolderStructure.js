@@ -4,8 +4,8 @@
     const outFolder = [];
     const dirHandle = await showDirectoryPicker();
     out[0] = { "id": 0, "type": "directory", "hasChildren": true, "folderName": dirHandle.name, "name": dirHandle.name, "content": null, "children": [] };
-await handleDirectoryEntry(dirHandle, out[0].children);
-await handleOnlyDirectoryEntry(dirHandle, outFolder);
+    await handleDirectoryEntry(dirHandle, out[0].children);
+    await handleOnlyDirectoryEntry(dirHandle, outFolder);
 
 return { 'FullTree': out, 'FolderTree': outFolder };
 }

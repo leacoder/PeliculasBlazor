@@ -18,15 +18,14 @@ namespace BlazorApp1.Server.Controllers
         private readonly IWebHostEnvironment env;
         private readonly ILogger<FilesaveController> logger;
 
-        public FilesaveController(IWebHostEnvironment env,
-            ILogger<FilesaveController> logger)
+        public FilesaveController(IWebHostEnvironment env, ILogger<FilesaveController> logger)
         {
             this.env = env;
             this.logger = logger;
         }
 
         [HttpPost("AppendFile/{fragment}")]
-        public async Task<bool> UploadFileChunk(int fragment, IFormFile file)
+        public async Task<ActionResult<bool>> UploadFileChunk(int fragment, IFormFile file)
         {
             try
             {
@@ -41,13 +40,13 @@ namespace BlazorApp1.Server.Controllers
                 {
                     await file.CopyToAsync(fileStream);
                 }
-                return true;
+                return Ok(true);
             }
             catch (Exception exception)
             {
                 Console.WriteLine("Exception: {0}", exception.Message);
             }
-            return false;
+            return Ok(false);
         }
 
         [HttpPost]

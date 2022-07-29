@@ -4,6 +4,7 @@
 @inject IJSRuntime JS
 @inject HttpClient Http
 @using System.Text
+@using System.Text.Json
 @using Telerik.Blazor
 @using Telerik.Blazor.Components
 
@@ -45,40 +46,15 @@
 </container>
 
 @code {
-
-    [JSInvokable]
-    public Task<int[]> ReturnArrayAsync(byte[] datos, int fragment)
-    {
-        using var formFile = new MultipartFormDataContent();
-        var fileContent = new StreamContent(new MemoryStream(datos));
-        formFile.Add(fileContent, "file", "test.txt");
-                
-        var response = Http.PostAsync($"Filesave/AppendFile/{fragment}", formFile);
-
-        return Task.FromResult(new int[] { 1, 2, 3 });
-    }
-
-    public IEnumerable<TreeItem> HierarchicalData { get; set; }
-    public IEnumerable<Object> ExpandedItems { get; set; }
-    private string? fileText;
+    public IEnumerable<TreeItem>? HierarchicalData { get; set; }
+    public IEnumerable<Object>? ExpandedItems { get; set; }
     public IEnumerable<object> SelectedItems { get; set; } = new List<object>();
-      protected override void OnAfterRender(bool firstRender)
-      {
-        base.OnAfterRender(firstRender);
-        if (firstRender)
-        {
-          // See warning about memory above in the article
-          
-          //JS.InvokeVoidAsync("BlazorUniversity.startRandomGenerator", dotNetReference);
-        }
-      }
 
     private async Task OpenFilePicker()
     {
         var dotNetReference = DotNetObjectReference.Create(this);
         var treeDirectory = await JS.InvokeAsync<Trees>("readData", dotNetReference);
 
-        //Console.WriteLine("Console blazor");
         //TreeItem[] treeDirectory = JsonSerializer.Deserialize<TreeItem[]>(result);
 
         //var biteArray = treeDirectory.FullTree[0].Children[0].Content;
@@ -89,21 +65,19 @@
         //}
 
         HierarchicalData = treeDirectory.FullTree.ToList();
-
-        //var FolderData = treeDirectory.Where(x => x.Type == "directory").SelectMany(x => x.Children);
         ExpandedItems = treeDirectory.FullTree.ToList();
+    }
 
+    [JSInvokable]
+    public async Task<bool> SendChunkToServer(byte[] byteArrayChunk, int fragment, string fileName)
+    {
+        using var formFile = new MultipartFormDataContent();
+        var fileContent = new StreamContent(new MemoryStream(byteArrayChunk));
+        formFile.Add(fileContent, "file", fileName);
 
-        //var fileContent = new StreamContent(treeDirectory[2].Content);
+        var response = await Http.PostAsync($"Filesave/AppendFile/{fragment}", formFile);
 
-        //fileContent.Headers.ContentType = new MediaTypeHeaderValue(treeDirectory[2].Type);
-
-        //files.Add(new() { Name = treeDirectory[2].Name });
-
-        //content.Add(
-        //    content: fileContent,
-        //    name: "\"files\"",
-        //    fileName: treeDirectory[2].Name);
+        return true;
     }
 
     public async void DownloadFile(string fileName, string content)
@@ -130,6 +104,4 @@
         public int? Parent { get; set; }
         public byte[] Content { get; set; }        
     }
-    
-
 }

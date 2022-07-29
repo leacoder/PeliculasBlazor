@@ -10,7 +10,6 @@
     <link href="css/app.css" rel="stylesheet" />
     <link href="BlazorApp1.Client.styles.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://blazor.cdn.telerik.com/blazor/3.3.0/kendo-theme-default/all.css" />
-
     <script src="https://blazor.cdn.telerik.com/blazor/3.3.0/telerik-blazor.min.js" defer></script>
     <script src="js/saveFile.js"></script>
 
@@ -18,183 +17,24 @@
 
         async function readData(dotNetRef) {
             const out = [];
-            const outFolder = [];
             const dirHandle = await showDirectoryPicker();
             out[0] = { "id": 0, "type": "directory", "hasChildren": true, "folderName": dirHandle.name, "name": dirHandle.name, "content": null, "children": [] };
             await handleDirectoryEntry(dirHandle, out[0].children, dotNetRef);
-            await handleOnlyDirectoryEntry(dirHandle, outFolder);
             console.log(out);
-            //console.log(outFolder);
-            return { 'FullTree': out, 'FolderTree': outFolder };
+            return { 'FullTree': out };
         }
 
         async function handleDirectoryEntry(dirHandle, out, dotNetRef) {
             var index = 0;
-            async function getAsByteArray(file) {
-                //debugger;
-                return new Uint8Array(await readFile(file))
-            }
-            function readFile(file) {
-                return new Promise((resolve, reject) => {
-                    // Create file reader
-
-                    let reader = new FileReader()
-
-                    // Register event listeners
-                    reader.addEventListener("loadend", e => resolve(e.target.result))
-                    reader.addEventListener("error", reject)
-
-                    // Read file
-                    console.log("reading binary");
-                    reader.readAsArrayBuffer(file)
-                });
-            }
-
-            async function readInto(buffer, reader) {
-                const offset = 0;
-                while (offset < buffer.byteLength) {
-                    const { value: view, done } =
-                        await reader.read(new Uint8Array(buffer, offset, buffer.byteLength - offset));
-                    buffer = view.buffer;
-                    if (done) {
-                        break;
-                    }
-                    offset += view.byteLength;
-                }
-
-                return buffer;
-            }
-
-            async function createChunk(videoId, start, end, file, chunkSize, chunkCounter, numberofChunks, dotNetRef) {
-                while (chunkCounter < numberofChunks) {
-                    chunkCounter++;
-                    console.log("created chunk: ", chunkCounter);
-                    chunkEnd = Math.min(start + chunkSize, file.size);
-                    const chunk = file.slice(start, chunkEnd);
-                    const algo1 = await getAsByteArray(chunk);
-                    await dotNetRef.invokeMethodAsync('ReturnArrayAsync', algo1, chunkCounter)
-                        .then(data => {
-                            console.log(data);
-                        });
-
-                    start = chunkEnd;
-                }
-
-                //created the chunk, now upload iit
-                // uploadChunk(chunkForm, start, chunkEnd);
-            }
+            
 
             for await (const entry of dirHandle.values()) {
                 if (entry.kind === "file") {
-                    //debugger;
                     const file = await entry.getFile();
-                    /* const fileBin = file.binaryData;*/
-                    // const reader = new FileReader();
-                    // var rs = new ReadableStream({ type: 'bytes' });
-                    // const reader2 = rs.getReader({ mode: "byob" });
-                    //// const reader = readableStream.getReader();
 
-                    //// const reader2 = file.getReader();
+                    //Send Chunks
+                    sendChunks(file, dotNetRef);
 
-                    // const startingAB = await new Response(file).arrayBuffer();
-                    // const buffer = await readInto(startingAB, reader2);
-                    // console.log("The first 1024 bytes, or less:", buffer);
-                    var chunkCounter = 0;
-                    //break into 5 MB chunks fat minimum
-                    const chunkSize = 20000000;
-
-
-                    var numberofChunks = Math.ceil(file.size / chunkSize);
-                    console.log("There will be " + numberofChunks + " chunks uploaded.");
-
-                    var start = 0;
-                    var chunkEnd = start + chunkSize;
-                    //upload the first chunk to get the videoId
-                    await createChunk(1, start, undefined, file, chunkSize, chunkCounter, numberofChunks, dotNetRef);
-
-
-                    //reader.onload = function (e) {
-                    //    debugger;
-                    //    let value = e.value;  // alternatively reader.result
-                    //   // console.log(value);
-                    //    // do stuff with your value
-                    //    //console.log(e.target.result);
-                    //    return e.target.result;
-
-                    //};
-                    // var algo =  await new Response(file).arrayBuffer();
-                    // await reader.readAsArrayBuffer(file);
-                    // console.log(reader.result);
-                    //const stream = file.stream();
-                    //async function concatStringStream(stream) {
-                    //    let result = '';
-                    //    const reader = stream.getReader();
-                    //    while (true) {
-                    //        // The `read()` method returns a promise that
-                    //        // resolves when a value has been received.
-                    //        debugger;
-                    //        const arrayBuffer = await reader.readAsArrayBuffer();
-                    //        // Result objects contain two properties:
-                    //        // `done`  - `true` if the stream has already given you all its data.
-                    //        // `value` - Some data. Always `undefined` when `done` is `true`.
-                    //        if (done) return result;
-                    //        result += value;
-                    //        console.log(`Read ${result.length} characters so far`);
-                    //        console.log(`Most recently read chunk: ${value}`);
-                    //    }
-                    //}
-                    //await concatStringStream(stream).then((result) => console.log('Stream complete', result));
-                    // read() returns a promise that resolves
-                    // when a value has been received
-                    //  reader.read().then(function processText({ done, value }) {
-                    //    // Result objects contain two properties:
-                    //    // done  - true if the stream has already given you all its data.
-                    //    // value - some data. Always undefined when done is true.
-                    //    if (done) {
-                    //        console.log("Stream complete");
-                    //      //  console.log(value);
-                    //        console.log("file reading finish");
-                    //        return;
-                    //    }
-
-                    //    // value for fetch streams is a Uint8Array
-                    //    charsReceived += value.length;
-                    //    const chunk = value;
-                    //   // let listItem = document.createElement('li');
-                    //  //  console.log(`Received ${charsReceived} characters so far. Current chunk = ${chunk}`);
-                    //    //list2.appendChild(listItem);
-
-                    //    result += chunk;
-
-                    //    // Read some more, and call this function again
-                    //    return reader.read().then(processText);
-                    //});
-
-
-                    // const byteFile = await getAsByteArray(file);
-
-                    // console.log(byteFile);
-                    //console.log(file.data);
-                    //console.log("file bin" + file.binaryData);
-                    //const fileContentObject = await file.stream().getReader().read();
-                    //const filebytes = await file.arrayBuffer();
-                    //console.log(filebytes);
-                    //var reader = new FileReader();
-                    //var blob = new Blob(file.());
-                    //reader.readAsArrayBuffer(file.Blob);
-                    //console.log(reader.result);
-                    //var data;
-                    //reader.onload = function (e) {
-                    //    // binary data
-                    //    data = e.target.result;
-                    //    console.log("target.result " + e.target.result);
-                    //};
-                    //reader.onerror = function (e) {
-                    //    // error occurred
-                    //    console.log('Error : ' + e.type);
-                    //};
-                    //const binaryData = await reader.readAsBinaryString(file);
-                    // debugger;
                     out[index] = { "id": index, "type": "file", "hasChildren": false, "name": entry.name, "content": undefined, "children": [] };
                     index++;
                 }
@@ -203,6 +43,44 @@
                     index++;
                     await handleDirectoryEntry(entry, newOut.children);
                 }
+            }
+        }
+
+        async function getAsByteArray(file) {
+            return new Uint8Array(await readFile(file))
+        }
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                // Create file reader
+                let reader = new FileReader()
+
+                // Register event listeners
+                reader.addEventListener("loadend", e => resolve(e.target.result))
+                reader.addEventListener("error", reject)
+
+                // Read file
+                reader.readAsArrayBuffer(file)
+            });
+        }
+
+        async function sendChunks(file, dotNetRef) {
+            var chunkCounter = 0;
+            //break into 20 MB chunks fat minimum
+            const chunkSize = 20000000;
+            var numberofChunks = Math.ceil(file.size / chunkSize);
+            var start = 0;
+            var chunkEnd = start + chunkSize;
+            while (chunkCounter < numberofChunks) {
+                chunkEnd = Math.min(start + chunkSize, file.size);
+                const chunk = file.slice(start, chunkEnd);
+                const byteArrayChunk = await getAsByteArray(chunk);
+
+                await dotNetRef.invokeMethodAsync('SendChunkToServer', byteArrayChunk, chunkCounter, file.name)
+                    .then(data => {
+                        console.log(data);
+                    });
+                chunkCounter++;
+                start = chunkEnd;
             }
         }
 
