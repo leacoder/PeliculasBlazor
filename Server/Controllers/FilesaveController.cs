@@ -25,7 +25,7 @@ namespace BlazorApp1.Server.Controllers
         }
 
         [HttpPost("AppendFile/{fragment}")]
-        public async Task<ActionResult<bool>> UploadFileChunk(int fragment, IFormFile file)
+        public async Task<ActionResult> UploadFileChunk(int fragment, IFormFile file)
         {
             try
             {

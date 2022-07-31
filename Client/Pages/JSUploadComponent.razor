@@ -69,15 +69,28 @@
     }
 
     [JSInvokable]
-    public async Task<bool> SendChunkToServer(byte[] byteArrayChunk, int fragment, string fileName)
+    public async Task SendChunkToServer(byte[] byteArrayChunk, int fragment, string fileName)
     {
+        var success = false;
+        int retryTimes = 0;
         using var formFile = new MultipartFormDataContent();
         var fileContent = new StreamContent(new MemoryStream(byteArrayChunk));
         formFile.Add(fileContent, "file", fileName);
 
-        var response = await Http.PostAsync($"Filesave/AppendFile/{fragment}", formFile);
+        while (!success && retryTimes <= 3 )
+        {
+            var response = await Http.PostAsync($"Filesave/AppendFile/{fragment}", formFile);
+            success = response.Content.ReadFromJsonAsync<bool>().Result;
+            if (!success)
+                await Task.Delay(100);
+            retryTimes++;
+        }
+               
+        if (!success)
+        {
+            //show error
+        }
 
-        return true;
     }
 
     public async void DownloadFile(string fileName, string content)

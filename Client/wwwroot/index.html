@@ -75,10 +75,8 @@
                 const chunk = file.slice(start, chunkEnd);
                 const byteArrayChunk = await getAsByteArray(chunk);
 
-                await dotNetRef.invokeMethodAsync('SendChunkToServer', byteArrayChunk, chunkCounter, file.name)
-                    .then(data => {
-                        console.log(data);
-                    });
+                await dotNetRef.invokeMethodAsync('SendChunkToServer', byteArrayChunk, chunkCounter, file.name);
+
                 chunkCounter++;
                 start = chunkEnd;
             }
