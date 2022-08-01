@@ -11,22 +11,19 @@
     <link href="BlazorApp1.Client.styles.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://blazor.cdn.telerik.com/blazor/3.3.0/kendo-theme-default/all.css" />
     <script src="https://blazor.cdn.telerik.com/blazor/3.3.0/telerik-blazor.min.js" defer></script>
-    <script src="js/saveFile.js"></script>
 
     <script>
 
         async function readData(dotNetRef) {
             const out = [];
             const dirHandle = await showDirectoryPicker();
-            out[0] = { "id": 0, "type": "directory", "hasChildren": true, "folderName": dirHandle.name, "name": dirHandle.name, "content": null, "children": [] };
+            out[0] = { "id": 0, "type": "directory", "hasChildren": true, "folderName": dirHandle.name, "name": dirHandle.name, "children": [] };
             await handleDirectoryEntry(dirHandle, out[0].children, dotNetRef);
-            console.log(out);
             return { 'FullTree': out };
         }
 
         async function handleDirectoryEntry(dirHandle, out, dotNetRef) {
             var index = 0;
-            
 
             for await (const entry of dirHandle.values()) {
                 if (entry.kind === "file") {
@@ -35,32 +32,15 @@
                     //Send Chunks
                     sendChunks(file, dotNetRef);
 
-                    out[index] = { "id": index, "type": "file", "hasChildren": false, "name": entry.name, "content": undefined, "children": [] };
+                    out[index] = { "id": index, "type": "file", "hasChildren": false, "name": entry.name, "children": [] };
                     index++;
                 }
                 if (entry.kind === "directory") {
                     const newOut = out[index] = { "id": index, "hasChildren": true, "type": "directory", "folderName": entry.name, "name": entry.name, "content": null, "children": [], "icon": "folder" };
                     index++;
-                    await handleDirectoryEntry(entry, newOut.children);
+                    await handleDirectoryEntry(entry, newOut.children, dotNetRef);
                 }
             }
-        }
-
-        async function getAsByteArray(file) {
-            return new Uint8Array(await readFile(file))
-        }
-        function readFile(file) {
-            return new Promise((resolve, reject) => {
-                // Create file reader
-                let reader = new FileReader()
-
-                // Register event listeners
-                reader.addEventListener("loadend", e => resolve(e.target.result))
-                reader.addEventListener("error", reject)
-
-                // Read file
-                reader.readAsArrayBuffer(file)
-            });
         }
 
         async function sendChunks(file, dotNetRef) {
@@ -82,18 +62,23 @@
             }
         }
 
-        async function handleOnlyDirectoryEntry(dirHandle, outFolder) {
-            var index = 0;
-
-            for await (const entry of dirHandle.values()) {
-                if (entry.kind === "directory") {
-                    const newOut = outFolder[index] = { "id": index, "type": "directory", "name": entry.name, "content": null, "children": [] };
-                    index++;
-                    await handleOnlyDirectoryEntry(entry, newOut.children);
-                }
-            }
+        async function getAsByteArray(chunkFile) {
+            return new Uint8Array(await readFile(chunkFile));
         }
 
+        function readFile(chunkFile) {
+            return new Promise((resolve, reject) => {
+                // Create file reader
+                let reader = new FileReader();
+
+                // Register event listeners
+                reader.addEventListener("loadend", event => { resolve(event.target.result); });
+                reader.addEventListener("error", reject);
+
+                // Read file
+                reader.readAsArrayBuffer(chunkFile);
+            });
+        }
 
     </script>
 

@@ -63,6 +63,10 @@ a, .btn-link {
 .blazor-error-boundary::after {
     content: "An error has occurred."
 }
+
+/*.k-treeview-bot{
+    display: none !important;
+}*/
 /*.file-input-zone {
     display: flex;
     align-items: center;

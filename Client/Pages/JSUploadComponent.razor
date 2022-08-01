@@ -1,4 +1,4 @@
-﻿@page "/foldertreejs"
+﻿@page "/"
 @using System.Net.Http.Headers
 @inject ILogger<UploadDataBackComponent> Logger
 @inject IJSRuntime JS
@@ -9,7 +9,8 @@
 @using Telerik.Blazor.Components
 
 
-<PageTitle>Read File from JS</PageTitle>
+<PageTitle>Read structure using javascript</PageTitle>
+<p>Read structure using javascript, upload files into C:/TEMP path</p>
 
 <button @onclick="OpenFilePicker" class="btn btn-primary">Open Directory Picker</button>
 
@@ -35,34 +36,23 @@
             {
                 <li>
                     <text>@item.Name.ToString()</text>
-                    @*<text>@item.Size.ToString()</text>*@
                 </li>
             }
         }
         </ul>
     </div>
 }
-
 </container>
 
 @code {
     public IEnumerable<TreeItem>? HierarchicalData { get; set; }
     public IEnumerable<Object>? ExpandedItems { get; set; }
-    public IEnumerable<object> SelectedItems { get; set; } = new List<object>();
+    public IEnumerable<object>? SelectedItems { get; set; } = new List<object>();
 
     private async Task OpenFilePicker()
     {
         var dotNetReference = DotNetObjectReference.Create(this);
         var treeDirectory = await JS.InvokeAsync<Trees>("readData", dotNetReference);
-
-        //TreeItem[] treeDirectory = JsonSerializer.Deserialize<TreeItem[]>(result);
-
-        //var biteArray = treeDirectory.FullTree[0].Children[0].Content;
-
-        //foreach (var item in treeDirectory.FullTree.First().Children)
-        //{
-        //    DownloadFile(item.Name,  Encoding.Default.GetString(item.Content) );    
-        //}
 
         HierarchicalData = treeDirectory.FullTree.ToList();
         ExpandedItems = treeDirectory.FullTree.ToList();
@@ -85,7 +75,7 @@
                 await Task.Delay(100);
             retryTimes++;
         }
-               
+
         if (!success)
         {
             //show error
@@ -93,15 +83,10 @@
 
     }
 
-    public async void DownloadFile(string fileName, string content)
-    {
-         var algo = await JS.InvokeAsync<object>("saveFile", fileName, content); 
-    }
-
     public class Trees
     {
-        public List<TreeItem> FolderTree { get; set; }
-        public List<TreeItem> FullTree { get; set; }
+        public List<TreeItem> FolderTree { get; set; } = new List<TreeItem>();
+        public List<TreeItem> FullTree { get; set; } = new List<TreeItem>();
     }
 
     public class TreeItem
@@ -112,9 +97,6 @@
         public string FolderName { get; set; }
         public bool HasChildren { get; set; }
         public int Id { get; set; }
-        public string Text { get; set; }
         public string Icon { get; set; }
-        public int? Parent { get; set; }
-        public byte[] Content { get; set; }        
     }
 }

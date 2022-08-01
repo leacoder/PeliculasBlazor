@@ -45,8 +45,8 @@ namespace BlazorApp1.Server.Controllers
             catch (Exception exception)
             {
                 Console.WriteLine("Exception: {0}", exception.Message);
+                return Ok(false);
             }
-            return Ok(false);
         }
 
         [HttpPost]
