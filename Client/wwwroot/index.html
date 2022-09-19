@@ -13,32 +13,49 @@
     <script src="https://blazor.cdn.telerik.com/blazor/3.3.0/telerik-blazor.min.js" defer></script>
 
     <script>
-
+        const files = [];
+        var indexFile = 0;
         async function readData(dotNetRef) {
+            
             const out = [];
+            
             const dirHandle = await showDirectoryPicker();
-            out[0] = { "id": 0, "type": "directory", "hasChildren": true, "folderName": dirHandle.name, "name": dirHandle.name, "children": [] };
-            await handleDirectoryEntry(dirHandle, out[0].children, dotNetRef);
+           // const dirHandle = await showOpenFilePicker();
+            //var file11 = await dirHandle[0].getFile();
+            out[0] = { "id": 0, "type": "directory", "hasChildren": true, "folderName": dirHandle.name, "name": dirHandle.name, "path": dirHandle.name, "children": [] };
+            await handleDirectoryEntry(dirHandle, out[0].children, dotNetRef, dirHandle.name);
             return { 'FullTree': out };
         }
 
-        async function handleDirectoryEntry(dirHandle, out, dotNetRef) {
+        async function handleDirectoryEntry(dirHandle, out, dotNetRef, path) {
             var index = 0;
+           
+
 
             for await (const entry of dirHandle.values()) {
                 if (entry.kind === "file") {
+                  //  debugger;
+                    indexFile++;
                     const file = await entry.getFile();
+                    var fileStructure = {
+                        idfile: indexFile,
+                        file: file
+                    } 
 
+                    files[index] = { "File" : fileStructure };
+
+                   // debugger;
                     //Send Chunks
-                    sendChunks(file, dotNetRef);
+                 //   sendChunks(file, dotNetRef);
 
-                    out[index] = { "id": index, "type": "file", "hasChildren": false, "name": entry.name, "children": [] };
+                    out[index] = { "id": indexFile, "type": "file", "hasChildren": false, "name": entry.name, "children": [], "path": path };
                     index++;
                 }
                 if (entry.kind === "directory") {
-                    const newOut = out[index] = { "id": index, "hasChildren": true, "type": "directory", "folderName": entry.name, "name": entry.name, "content": null, "children": [], "icon": "folder" };
+                  //  debugger;
+                    const newOut = out[index] = { "id": index, "hasChildren": true, "type": "directory", "folderName": entry.name, "path": path + "/" + entry.name, "name": entry.name, "children": [], "icon": "folder" };
                     index++;
-                    await handleDirectoryEntry(entry, newOut.children, dotNetRef);
+                    await handleDirectoryEntry(entry, newOut.children, dotNetRef, path +"/"+entry.name);
                 }
             }
         }

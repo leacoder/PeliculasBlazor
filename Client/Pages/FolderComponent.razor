@@ -2,6 +2,7 @@
 @using System.Text
 @inject FileSystemAccessService FileSystemAccessService;
 @using BlazorApp1.Shared
+@using KristofferStrube.Blazor.FileSystemAccess
 
 <h3>Folder Tree Component</h3>
 <div class="container">
@@ -90,14 +91,18 @@
                 var directoryBase = new List<Folder>() { new Folder(){ Name = directoryHandle.Name } };
                 var directoryFlat = new List<FlatFolder>() { new FlatFolder() { Text = directoryHandle.Name, Id = directoryId, Parent = null, Icon = ElementType.folder.ToString() } };
                 var values = await directoryHandle.ValuesAsync();
-
-                entitiesChecked = 0;
+                //  var firstFileHandle =  values.First();
+                //FileSystemFileHandle fileHandle = (FileSystemFileHandle)firstFileHandle;
+                //var file = fileHandle.GetFileAsync();
                 StateHasChanged();
                 var queue = new Queue<(Entity entity, FileSystemDirectoryHandle dir, FileSystemHandle value)>();
                 foreach (var value in values)
                 {
                     if (value.Kind is FileSystemHandleKind.File)
                     {
+                        var handleFile = await directoryHandle.GetFileHandleAsync(value.Name);
+                        var File = await handleFile.GetFileAsync();
+                        var  fileBytes = await File.JSReference.InvokeAsync<byte[]>("getBlob");
                         string path = GetPath(directoryBase.First(), value.Name);
                         directoryBase.First().Files.Add( new FileManaged() { Name = value.Name, Path = path });
                         var flatBaseDirectory = directoryFlat.First();
@@ -127,8 +132,8 @@
                     if (value.Kind is FileSystemHandleKind.File)
                     {
                         var fileSystemHandle = await dir.GetFileHandleAsync(value.Name);
-                        var file = await fileSystemHandle.GetFileAsync();
-                        entity.Size = file.Size;
+                        var file1 = await fileSystemHandle.GetFileAsync();
+                        entity.Size = file1.Size;
                         //Add file to logic structure
                         //var parentFolder = SearchParentFolders(directoryBase, dir.Name);
 
